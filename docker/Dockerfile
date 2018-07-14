@@ -1,6 +1,6 @@
 FROM alpine:3.8
 
-MAINTAINER Lukas Eichler <lukas@eichler.io>
+LABEL maintainer="Lukas Eichler <lukas@eichler.io>"
 
 ARG SPIRE_VERSION=0.6.0
 ARG SPIRE_TGZ=https://github.com/spiffe/spire/releases/download/${SPIRE_VERSION}/spire-${SPIRE_VERSION}-linux-x86_64-glibc.tar.gz

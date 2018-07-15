@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "server.spire.fullname" . }}
+  labels:
+    app: {{ template "spire.name" . }}
+    component: server
+    chart: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "spire.name" . }}
+      component: server
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "spire.name" . }}
+        component: server
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - /spire-server
+            - run
+            - config
+            - /conf/server/server.conf
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: bind
+              containerPort: 8081
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /conf/server/
+              readOnly: true
+            - name: upstream-ca
+              mountPath: /conf/upstream_ca
+              readOnly: true
+      resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+        - name: config
+          configMap: 
+            name: {{ template "server.spire.fullname" . }}
+        - name: upstream-ca
+          secret:
+            secretName: {{ template "server.spire.fullname" . }}

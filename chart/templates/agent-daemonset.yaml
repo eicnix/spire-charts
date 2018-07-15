@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "agent.spire.fullname" . }}
+  labels:
+    app: {{ template "spire.name" . }}
+    component: agent
+    chart: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "spire.name" . }}
+      component: agent
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "spire.name" . }}
+        component: agent
+        release: {{ .Release.Name }}
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+        - name: agent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - /spire-agent
+            - run
+            - config
+            - /conf/agent/agent.conf
+          resources:
+            limits:
+              memory: 200Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+          volumeMounts:
+            - name: config
+              mountPath: /conf/agent/
+              readOnly: true
+            - name: upstream-ca
+              mountPath: /conf/upstream_ca
+              readOnly: true
+      volumes:
+        - name: config
+          configMap: 
+            name: {{ template "agent.spire.fullname" . }}
+        - name: upstream-ca
+          secret:
+            secretName: {{ template "server.spire.fullname" . }}

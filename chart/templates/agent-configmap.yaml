@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "agent.spire.fullname" . }}
+  labels:
+    app: {{ template "spire.name" . }}
+    component: agent
+    chart: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  agent.conf: |
+    agent {
+        trust_domain = {{ .Values.general.trustDomain | quote }}
+        trust_bundle_path = "/conf/upstream_ca/upstream_ca.crt"
+        server_address = "{{ template "server.spire.fullname" . }}"
+        server_port = "8081"
+        plugin_dir = "conf/server/plugin"
+        log_level = {{ .Values.general.logLevel | quote}}
+        umask = ""
+    }
+{{ tpl .Values.agent.pluginConfig . | indent 4 }}

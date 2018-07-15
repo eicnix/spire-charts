@@ -11,7 +11,7 @@ RUN curl --silent --location $SPIRE_TGZ | tar --directory /tmp -xzf - \
     && ls -lah /tmp/spire 
 
 FROM debian:8.11-slim
-RUN apt-get install -y ca-certificates
+RUN apt-get update && apt-get install -y ca-certificates
 COPY --from=0 /tmp/spire/spire-agent /spire-agent
 COPY --from=0 /tmp/spire/spire-server /spire-server
 ENTRYPOINT [ "/bin/bash" ]

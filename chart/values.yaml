@@ -1,0 +1,108 @@
+image:
+  repository: eicnix/spire-charts
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+
+general:
+  trustDomain: example.org
+  logLevel: DEBUG
+  baseSvidTtl: 999999
+  serverSvidTtl: 999999
+
+server:
+  pluginConfig: |
+    plugins {
+        ServerCA "memory" { 
+        enabled = true
+        plugin_data {
+                trust_domain = "example.org",
+                key_size = 2048,
+                backdate_seconds = 1,
+                cert_subject = {
+                        Country = ["US"],
+                        Organization = ["SPIFFE"],
+                        CommonName = "",
+                        }
+                }
+        }
+
+        DataStore "sql" {
+                enabled = true
+                plugin_data {
+                        database_type = "sqlite3"
+                        connection_string = "/tmp/datastore.sqlite3"
+                }
+        }
+
+        NodeAttestor "gcp_iit" {
+                enabled = true
+                plugin_data {
+                        trust_domain = "example.org"
+                        projectid_whitelist = ["it-network-2f25bed6c0"]
+                }
+        }
+
+        NodeResolver "noop" {
+                enabled = true
+                plugin_data {}
+        }
+
+        UpstreamCA "disk" {
+                enabled = true
+                plugin_data {
+                        trust_domain = "example.org"
+                        ttl = "1h"
+                        key_file_path = "/conf/upstream_ca/upstream_ca.key"
+                        cert_file_path = "/conf/upstream_ca/upstream_ca.crt"
+                }
+        }
+    }
+
+agent:
+  pluginConfig: |
+    plugins {
+        NodeAttestor "gcp_iit" {
+            enabled = true
+            plugin_data {
+                trust_domain = "example.org"
+            }
+        }
+        KeyManager "memory" {
+            enabled = true
+            plugin_data {
+            }
+        }
+        WorkloadAttestor "unix" {
+            enabled = true
+            plugin_data {
+            }
+        }
+    }
+upstreamCa:
+  cert: |
+    -----BEGIN CERTIFICATE-----
+    MIIBzDCCAVOgAwIBAgIJAJM4DhRH0vmuMAoGCCqGSM49BAMEMB4xCzAJBgNVBAYT
+    AlVTMQ8wDQYDVQQKDAZTUElGRkUwHhcNMTgwNTEzMTkzMzQ3WhcNMjMwNTEyMTkz
+    MzQ3WjAeMQswCQYDVQQGEwJVUzEPMA0GA1UECgwGU1BJRkZFMHYwEAYHKoZIzj0C
+    AQYFK4EEACIDYgAEWjB+nSGSxIYiznb84xu5WGDZj80nL7W1c3zf48Why0ma7Y7m
+    CBKzfQkrgDguI4j0Z+0/tDH/r8gtOtLLrIpuMwWHoe4vbVBFte1vj6Xt6WeE8lXw
+    cCvLs/mcmvPqVK9jo10wWzAdBgNVHQ4EFgQUh6XzV6LwNazA+GTEVOdu07o5yOgw
+    DwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwGQYDVR0RBBIwEIYOc3Bp
+    ZmZlOi8vbG9jYWwwCgYIKoZIzj0EAwQDZwAwZAIwE4Me13qMC9i6Fkx0h26y09QZ
+    IbuRqA9puLg9AeeAAyo5tBzRl1YL0KNEp02VKSYJAjBdeJvqjJ9wW55OGj1JQwDF
+    D7kWeEB6oMlwPbI/5hEY3azJi16I0uN1JSYTSWGSqWc=
+    -----END CERTIFICATE-----
+  key: |
+    -----BEGIN EC PRIVATE KEY-----
+    MIGkAgEBBDAg2LbulXzQX1NF+2Di0RKzMWfEGioBhh/fFpx7yOEqka//TpaeU3O5
+    QJRZXdWHKuagBwYFK4EEACKhZANiAARaMH6dIZLEhiLOdvzjG7lYYNmPzScvtbVz
+    fN/jxaHLSZrtjuYIErN9CSuAOC4jiPRn7T+0Mf+vyC060susim4zBYeh7i9tUEW1
+    7W+Ppe3pZ4TyVfBwK8uz+Zya8+pUr2M=
+    -----END EC PRIVATE KEY-----
+
+resources:
+  requests:
+    cpu: 0
